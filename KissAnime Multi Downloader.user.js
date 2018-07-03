@@ -405,7 +405,8 @@ function rapidvideo(html){
             setQuality = quality[i]; break;
         }
     }
-    console.log(setQuality);
+    //console.log(setQuality);
+    //console.log(url);
     url += "&q="+setQuality+"p";
     //alert(url);
     GM_xmlhttpRequest({
@@ -413,8 +414,7 @@ function rapidvideo(html){
         url: ""+url,
         synchronous: true,
         onload: function(response) {
-            //console.log(response);
-            var e = response.responseText.split('<source src="')[1].split('"')[0];
+            var e = response.responseText.match('\src: "(.+?)"')[1];
             if (e === undefined || e === null) {
                 console.log(response.responseText);
             }else{
