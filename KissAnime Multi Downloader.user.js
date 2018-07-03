@@ -67,6 +67,9 @@ var max = 1;
      //getE();
     max = $(".listing").find("a").toArray().length;
     setUI();
+    $("#aquality").val("360, 480, 720, 1080");
+    $("#arapid").prop("checked", true);
+    $("#atxt").prop("checked", true);
     $("#aend").attr('value',max+"");
     $("#startscript").on('click',function(){
         start = $("#astart").val();
@@ -307,7 +310,7 @@ function ALLDONE(){
 function createTxtList(){
     var list ="";
     for(var i = 0; i < EpisodesVideoLinks.length; i++){
-        list += encodeURI(EpisodesVideoLinks[i]) + "[" +  EpisodesName[i].replace(/[\s:\|\[\]\{\}]+/g,"_") + ".mp4\n";
+        list += encodeURI(EpisodesVideoLinks[i]) + " " +  EpisodesName[i].replace(/[\s:\|\[\]\{\}]+/g,"_") + ".mp4\n";
     }
     $("#CaptchaInfo").show();
     $("#CaptchaInfo").find("p").html("You need to download <a href='https://cdn.rawgit.com/Eltion/Kissanime-Downloader/040e60bfcfc57c1b27e3ca7faf65204abf435056/KissAnime%20Downloader.zip'>KissAnime Downloader.zip</a><br /><br /> <a href='https://cdn.rawgit.com/Eltion/Kissanime-Downloader/5f62b6848a62d208ee799d6a8b256741fd7b9229/README.md'>Read this.</a>");
@@ -397,29 +400,40 @@ function beta(html){
 }
 
 function rapidvideo(html){
-    var qS = ["720","480","360"];
+    var qS = ["360", "480", "720"];
     var setQuality = "";
     var url = html.match(/https:\/\/www.rapidvideo.com\/e\/[^"']*/g);
-    for(var i = 0; i < quality.length; i++){
-        if(qS.includes(quality[i])){
-            setQuality = quality[i]; break;
-        }
-    }
-    console.log(setQuality);
-    url += "&q="+setQuality+"p";
-    //alert(url);
     GM_xmlhttpRequest({
         method: "GET",
         url: ""+url,
         synchronous: true,
         onload: function(response) {
-            //console.log(response);
-            var e = response.responseText.split('<source src="')[1].split('"')[0];
+            qS = response.responseText.match(/360p|480p|720p|1080p/g);
+        }
+    });
+    for (var i=0; i<quality.length; i++) {
+        if (qS.includes(quality[i] + 'p')) {
+            setQuality = quality[i];
+            break;
+        }
+    }
+    //console.log(setQuality);
+    GM_xmlhttpRequest({
+        method: "GET",
+        url: ""+url + "&q="+setQuality+"p",
+        synchronous: true,
+        onload: function(response) {
+            var e = response.responseText.match('\src: "(.+?)"');
+            if (e === undefined || e === null) {
+                e = response.responseText.match(/<source src="(.+?)"/);
+            }
+
             if (e === undefined || e === null) {
                 console.log(response.responseText);
-            }else{
+            } else {
                 console.log(e);
-                EpisodesVideoLinks.push(e);
+                EpisodesVideoLinks.push(e[1]);
+                success = true;
                 getNextEpisode(true);
                 //epsLinks.push(e);
             }
